@@ -232,8 +232,9 @@ function buildSynthesisPrompt(question: string, transcript: Message[]): { system
 function printDivider(label: string, color: chalk.Chalk = chalk.dim): void {
   const width = 70;
   const labelWidth = label.length + 2;
-  const pad = Math.max(0, Math.floor((width - labelWidth) / 2));
-  console.log(color('─'.repeat(pad) + ' ' + label + ' ' + '─'.repeat(width - pad - labelWidth)));
+  const pad      = Math.max(0, Math.floor((width - labelWidth) / 2));
+  const rightPad = Math.max(0, width - pad - labelWidth);
+  console.log(color('─'.repeat(pad) + ' ' + label + ' ' + '─'.repeat(rightPad)));
 }
 
 function printHeader(question: string, councilName: string): void {
