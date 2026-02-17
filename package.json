@@ -1,6 +1,6 @@
 {
   "name": "eklavya-council",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Eklavya Council — the debate your question deserves.",
   "main": "dist/cli.js",
   "bin": {
@@ -18,17 +18,24 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "llm",
     "ai",
-    "council",
+    "llm",
+    "cli",
     "debate",
+    "multi-agent",
+    "council",
     "personas",
+    "decision-making",
+    "anthropic",
+    "openai",
+    "gemini",
     "architecture",
     "mentoring",
-    "cli",
-    "decision-making"
+    "thinking-tool",
+    "ai-debate",
+    "multi-persona"
   ],
-  "author": "Eklavya Council Contributors",
+  "author": "Sreenath",
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
@@ -37,18 +44,24 @@
     "commander": "^12.1.0",
     "inquirer": "^10.2.2",
     "openai": "^4.77.0",
-    "ora": "^8.1.1",
-    "uuid": "^11.0.3"
+    "ora": "^8.1.1"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
     "@types/node": "^22.10.0",
-    "@types/uuid": "^10.0.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sreenathmmenon/eklavya-council.git"
+  },
+  "homepage": "https://github.com/sreenathmmenon/eklavya-council#readme",
+  "bugs": {
+    "url": "https://github.com/sreenathmmenon/eklavya-council/issues"
   }
 }
