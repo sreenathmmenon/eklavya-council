@@ -40,7 +40,7 @@ export function loadConfig(): EklavyaConfig {
   if (process.env.ANTHROPIC_API_KEY) {
     fromEnv.providers.anthropic = {
       api_key: process.env.ANTHROPIC_API_KEY,
-      default_model: 'claude-3-5-sonnet-20241022',
+      default_model: 'claude-sonnet-4-5-20250929',
     };
   }
   if (process.env.OPENAI_API_KEY) {

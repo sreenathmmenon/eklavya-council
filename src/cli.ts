@@ -126,7 +126,7 @@ program
     const openaiKey    = answers.openai_key    || existingOpenAI;
     const googleKey    = answers.google_key    || existingGoogle;
 
-    if (anthropicKey) newConfig.providers.anthropic = { api_key: anthropicKey, default_model: 'claude-3-5-sonnet-20241022' };
+    if (anthropicKey) newConfig.providers.anthropic = { api_key: anthropicKey, default_model: 'claude-sonnet-4-5-20250929' };
     if (openaiKey)    newConfig.providers.openai    = { api_key: openaiKey,    default_model: 'gpt-4o' };
     if (googleKey)    newConfig.providers.google    = { api_key: googleKey,    default_model: 'gemini-1.5-pro' };
 
