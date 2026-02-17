@@ -412,23 +412,30 @@ export async function runCouncil(
 
   let synthText = '';
   synthText = await callProvider(
-    { system: synthSys, user: synthUser, max_tokens: 700, temperature: 0.2 },
+    { system: synthSys, user: synthUser, max_tokens: 1000, temperature: 0.2 },
     activeProvider, config, undefined,
     null // no streaming — need clean JSON
   );
   providerCalls++;
 
-  // Strip markdown code fences if the model wraps output despite instructions
-  synthText = synthText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+  // Robust JSON extraction: strip code fences, then find first { ... last }
+  synthText = synthText
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+  const jsonMatch = synthText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) synthText = jsonMatch[0];
 
   let synthesis: Synthesis;
   try {
-    synthesis = JSON.parse(synthText);
-
-    // Validate required fields
-    if (!Array.isArray(synthesis.decisions) || !synthesis.summary) {
-      throw new Error('Synthesis JSON missing required fields');
-    }
+    synthesis = JSON.parse(synthText) as Synthesis;
+    // Normalise: fill in missing fields rather than failing
+    if (!Array.isArray(synthesis.decisions))     synthesis.decisions     = [];
+    if (!Array.isArray(synthesis.dissent))        synthesis.dissent       = [];
+    if (!Array.isArray(synthesis.open_questions)) synthesis.open_questions = [];
+    if (!Array.isArray(synthesis.actions))        synthesis.actions       = [];
+    if (!synthesis.confidence)                    synthesis.confidence    = 'medium';
+    if (!synthesis.summary)                       synthesis.summary       = 'See transcript.';
   } catch (parseErr) {
     // Fail loudly — save partial session, never return fake output
     const partial: Session = {

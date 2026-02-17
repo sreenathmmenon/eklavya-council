@@ -251,19 +251,31 @@ export async function runCouncilStream(
   const synthUser = [`Question: "${question}"`, ``, `Transcript:`, compactTranscript].join('\n');
 
   let synthText = await callProvider(
-    { system: synthSystem, user: synthUser, max_tokens: 700, temperature: 0.2 },
+    { system: synthSystem, user: synthUser, max_tokens: 1000, temperature: 0.2 },
     activeProvider, config, undefined, null
   );
   providerCalls++;
 
-  synthText = synthText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+  // Robust JSON extraction: strip code fences, then find first { ... last }
+  // This handles models that add preamble/postamble around the JSON
+  synthText = synthText
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+
+  const jsonMatch = synthText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) synthText = jsonMatch[0];
 
   let synthesis: Synthesis;
   try {
-    synthesis = JSON.parse(synthText);
-    if (!Array.isArray(synthesis.decisions) || !synthesis.summary) {
-      throw new Error('Missing required synthesis fields');
-    }
+    synthesis = JSON.parse(synthText) as Synthesis;
+    // Normalise: ensure all required arrays exist
+    if (!Array.isArray(synthesis.decisions))     synthesis.decisions     = [];
+    if (!Array.isArray(synthesis.dissent))        synthesis.dissent       = [];
+    if (!Array.isArray(synthesis.open_questions)) synthesis.open_questions = [];
+    if (!Array.isArray(synthesis.actions))        synthesis.actions       = [];
+    if (!synthesis.confidence)                    synthesis.confidence    = 'medium';
+    if (!synthesis.summary)                       synthesis.summary       = 'See transcript.';
   } catch {
     synthesis = {
       decisions: [],
@@ -271,7 +283,7 @@ export async function runCouncilStream(
       open_questions: [],
       actions: [],
       confidence: 'low',
-      summary: '[Synthesis failed — see transcript for full debate]',
+      summary: '[Synthesis could not be parsed — full debate is in the transcript above]',
     };
   }
 
