@@ -3,9 +3,11 @@ import os from 'os';
 import path from 'path';
 import { EklavyaConfig, ProviderName } from './types.js';
 
-const CONFIG_DIR = path.join(os.homedir(), '.eklavya');
-const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
-const SESSIONS_DIR = path.join(CONFIG_DIR, 'sessions');
+export const CONFIG_DIR   = path.join(os.homedir(), '.eklavya');
+export const CONFIG_FILE  = path.join(CONFIG_DIR, 'config.json');
+export const SESSIONS_DIR = path.join(CONFIG_DIR, 'sessions');
+export const PERSONAS_DIR = path.join(CONFIG_DIR, 'personas');
+export const COUNCILS_DIR = path.join(CONFIG_DIR, 'councils');
 
 export const DEFAULTS: EklavyaConfig = {
   providers: {},
@@ -16,17 +18,17 @@ export const DEFAULTS: EklavyaConfig = {
   max_tokens_per_turn: 400,
 };
 
-export function getConfigDir(): string {
-  return CONFIG_DIR;
-}
-
-export function getSessionsDir(): string {
-  return SESSIONS_DIR;
-}
+export function getConfigDir(): string   { return CONFIG_DIR;   }
+export function getSessionsDir(): string { return SESSIONS_DIR; }
+export function getPersonasDir(): string { return PERSONAS_DIR; }
+export function getCouncilsDir(): string { return COUNCILS_DIR; }
 
 export function ensureDirs(): void {
-  if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, { recursive: true });
+  for (const dir of [CONFIG_DIR, SESSIONS_DIR, PERSONAS_DIR, COUNCILS_DIR]) {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    }
+  }
 }
 
 export function loadConfig(): EklavyaConfig {
@@ -57,7 +59,8 @@ export function loadConfig(): EklavyaConfig {
   // Merge with file config
   if (fs.existsSync(CONFIG_FILE)) {
     try {
-      const fileConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+      const raw = fs.readFileSync(CONFIG_FILE, 'utf-8');
+      const fileConfig = JSON.parse(raw);
       return {
         ...fromEnv,
         ...fileConfig,
@@ -76,7 +79,8 @@ export function loadConfig(): EklavyaConfig {
 
 export function saveConfig(config: EklavyaConfig): void {
   ensureDirs();
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+  // Write with restricted permissions (owner read/write only) — protects API keys
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), { mode: 0o600 });
 }
 
 export function hasProvider(config: EklavyaConfig, provider: ProviderName): boolean {
@@ -92,6 +96,6 @@ export function getActiveProvider(config: EklavyaConfig): ProviderName {
   }
   throw new Error(
     'No API key configured. Run: eklavya init\n' +
-    'Or set ANTHROPIC_API_KEY / OPENAI_API_KEY environment variable.'
+    'Or set ANTHROPIC_API_KEY / OPENAI_API_KEY / GOOGLE_API_KEY environment variable.'
   );
 }

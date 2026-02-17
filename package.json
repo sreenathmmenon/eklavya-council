@@ -6,10 +6,14 @@
   "bin": {
     "eklavya": "./dist/cli.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsup src/cli.ts --format cjs --outDir dist --banner.js '#!/usr/bin/env node'",
+    "build": "tsup",
     "dev": "ts-node src/cli.ts",
-    "dev:ask": "ts-node src/cli.ts ask",
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
@@ -18,9 +22,11 @@
     "ai",
     "council",
     "debate",
+    "personas",
     "architecture",
     "mentoring",
-    "cli"
+    "cli",
+    "decision-making"
   ],
   "author": "Eklavya Council Contributors",
   "license": "MIT",

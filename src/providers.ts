@@ -6,7 +6,7 @@
 
 import { EklavyaConfig, LLMRequest, ProviderName, StreamCallback } from './types.js';
 
-// ─── Anthropic ───────────────────────────────────────────────────────────────
+// ─── Anthropic ────────────────────────────────────────────────────────────────
 
 async function streamAnthropic(
   request: LLMRequest,
@@ -39,7 +39,7 @@ async function streamAnthropic(
   return full;
 }
 
-// ─── OpenAI ──────────────────────────────────────────────────────────────────
+// ─── OpenAI ───────────────────────────────────────────────────────────────────
 
 async function streamOpenAI(
   request: LLMRequest,
@@ -74,6 +74,7 @@ async function streamOpenAI(
 }
 
 // ─── Google Gemini ────────────────────────────────────────────────────────────
+// Uses systemInstruction properly (not concatenated into user prompt)
 
 async function streamGoogle(
   request: LLMRequest,
@@ -83,10 +84,14 @@ async function streamGoogle(
 ): Promise<string> {
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const client = new GoogleGenerativeAI(apiKey);
-  const genModel = client.getGenerativeModel({ model });
 
-  const prompt = `${request.system}\n\n${request.user}`;
-  const result = await genModel.generateContentStream(prompt);
+  // Pass system prompt via systemInstruction — never concatenate with user content
+  const genModel = client.getGenerativeModel({
+    model,
+    systemInstruction: request.system,
+  });
+
+  const result = await genModel.generateContentStream(request.user);
 
   let full = '';
   for await (const chunk of result.stream) {
@@ -100,7 +105,7 @@ async function streamGoogle(
   return full;
 }
 
-// ─── Non-streaming fallback (collect then return) ────────────────────────────
+// ─── Non-streaming (for synthesis JSON) ──────────────────────────────────────
 
 async function collectAnthropic(
   request: LLMRequest,
@@ -113,6 +118,7 @@ async function collectAnthropic(
   const response = await client.messages.create({
     model,
     max_tokens: request.max_tokens ?? 400,
+    temperature: request.temperature ?? 0.3,
     system: request.system,
     messages: [{ role: 'user', content: request.user }],
   });
@@ -131,6 +137,7 @@ async function collectOpenAI(
   const response = await client.chat.completions.create({
     model,
     max_tokens: request.max_tokens ?? 400,
+    temperature: request.temperature ?? 0.3,
     messages: [
       { role: 'system', content: request.system },
       { role: 'user', content: request.user },
@@ -140,7 +147,41 @@ async function collectOpenAI(
   return response.choices[0]?.message?.content ?? '';
 }
 
-// ─── Unified Call ────────────────────────────────────────────────────────────
+async function collectGoogle(
+  request: LLMRequest,
+  apiKey: string,
+  model: string
+): Promise<string> {
+  const { GoogleGenerativeAI } = await import('@google/generative-ai');
+  const client = new GoogleGenerativeAI(apiKey);
+  const genModel = client.getGenerativeModel({
+    model,
+    systemInstruction: request.system,
+  });
+
+  const result = await genModel.generateContent(request.user);
+  return result.response.text();
+}
+
+// ─── Unified Call with Retry ──────────────────────────────────────────────────
+
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1500;
+
+async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
 
 export async function callProvider(
   request: LLMRequest,
@@ -151,30 +192,27 @@ export async function callProvider(
 ): Promise<string> {
   const providerConfig = config.providers[provider];
   if (!providerConfig?.api_key) {
-    throw new Error(`No API key configured for provider: ${provider}`);
+    throw new Error(`No API key configured for provider: ${provider}. Run: eklavya init`);
   }
 
   const apiKey = providerConfig.api_key;
   const model = personaModel ?? providerConfig.default_model;
   const streaming = onToken !== null && config.stream;
 
-  if (streaming) {
-    switch (provider) {
-      case 'anthropic': return streamAnthropic(request, apiKey, model, onToken!);
-      case 'openai':    return streamOpenAI(request, apiKey, model, onToken!);
-      case 'google':    return streamGoogle(request, apiKey, model, onToken!);
-    }
-  } else {
-    switch (provider) {
-      case 'anthropic': return collectAnthropic(request, apiKey, model);
-      case 'openai':    return collectOpenAI(request, apiKey, model);
-      case 'google': {
-        let buf = '';
-        await streamGoogle(request, apiKey, model, (t) => { buf += t; });
-        return buf;
+  return withRetry(async () => {
+    if (streaming) {
+      switch (provider) {
+        case 'anthropic': return streamAnthropic(request, apiKey, model, onToken!);
+        case 'openai':    return streamOpenAI(request, apiKey, model, onToken!);
+        case 'google':    return streamGoogle(request, apiKey, model, onToken!);
+      }
+    } else {
+      switch (provider) {
+        case 'anthropic': return collectAnthropic(request, apiKey, model);
+        case 'openai':    return collectOpenAI(request, apiKey, model);
+        case 'google':    return collectGoogle(request, apiKey, model);
       }
     }
-  }
-
-  return '';
+    return '';
+  });
 }
