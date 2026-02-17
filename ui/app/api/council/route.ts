@@ -13,6 +13,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+
+// Normalise errors from the Anthropic SDK (and others) into a human-readable string.
+// The SDK sometimes sets e.message to the raw JSON response body, e.g.:
+//   {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"},"request_id":"..."}
+function extractErrorMessage(e: any): string {
+  const FRIENDLY: Record<string, string> = {
+    overloaded_error : 'The AI service is temporarily overloaded. Please wait a moment and try again.',
+    rate_limit_error : 'Rate limit reached. Please wait a moment and try again.',
+    authentication_error: 'API key is invalid or not configured. Check your environment variables.',
+    invalid_request_error: 'Invalid request sent to the AI provider.',
+  };
+
+  // Anthropic SDK typed errors expose .error (the parsed response body)
+  const sdkBody = e?.error;
+  if (sdkBody && typeof sdkBody === 'object') {
+    const errType = (sdkBody as any)?.error?.type ?? (sdkBody as any)?.type;
+    if (errType && FRIENDLY[errType]) return FRIENDLY[errType];
+    const errMsg = (sdkBody as any)?.error?.message ?? (sdkBody as any)?.message;
+    if (errMsg) return String(errMsg);
+  }
+
+  // e.message may be the raw JSON body (seen in some SDK versions on serverless)
+  const msg = e?.message;
+  if (typeof msg === 'string') {
+    try {
+      const parsed = JSON.parse(msg);
+      const errType = parsed?.error?.type ?? parsed?.type;
+      if (errType && FRIENDLY[errType]) return FRIENDLY[errType];
+      const errMsg = parsed?.error?.message ?? parsed?.message;
+      if (errMsg) return String(errMsg);
+    } catch {
+      // not JSON — return as-is (but strip any internal CLI hints)
+      return msg.replace(/Run: eklavya \w+/g, '').trim() || 'Council error.';
+    }
+  }
+
+  return 'An unexpected error occurred. Please try again.';
+}
+
 export const maxDuration = 300; // 5 minutes max
 
 export async function POST(req: NextRequest) {
@@ -53,7 +92,7 @@ export async function POST(req: NextRequest) {
 
         send('[DONE]');
       } catch (e: any) {
-        send({ type: 'error', error: e.message ?? 'Internal error' });
+        send({ type: 'error', error: extractErrorMessage(e) });
         send('[DONE]');
       } finally {
         controller.close();
