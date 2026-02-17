@@ -198,6 +198,11 @@ export default function Home() {
           try {
             const chunk: StreamChunk = JSON.parse(data);
 
+            // ── error chunk from server ───────────────────────────────────
+            if (chunk.type === 'error') {
+              throw new Error(chunk.error ?? 'Council error');
+            }
+
             // ── speaker_start: new persona takes the floor ───────────────
             if (chunk.type === 'speaker_start') {
               const spk  = chunk.speaker!;
@@ -254,13 +259,10 @@ export default function Home() {
               setState('done');
               setCurrentSpeaker('');
             }
-
-            if (chunk.type === 'error') {
-              throw new Error(chunk.error ?? 'Council error');
-            }
           } catch (parseErr) {
-            if ((parseErr as Error).message?.includes('Council')) throw parseErr;
-            // skip malformed SSE frames
+            // Re-throw application errors; only swallow JSON SyntaxErrors
+            // (malformed/partial SSE frames are safe to skip, real errors are not)
+            if (!(parseErr instanceof SyntaxError)) throw parseErr;
           }
         }
       }
@@ -521,7 +523,7 @@ export default function Home() {
             role="log"
           >
 
-            {/* ── Empty state ── */}
+            {/* ── Empty / idle state ── */}
             {messages.length === 0 && state === 'idle' && (
               <div className="flex flex-col items-center justify-center h-full text-center gap-4">
                 <div className="text-5xl text-gray-800 font-light select-none">⊕</div>
@@ -532,6 +534,19 @@ export default function Home() {
                 <p className="text-gray-600 text-xs">
                   Select a council · enter your question · Convene
                 </p>
+              </div>
+            )}
+
+            {/* ── Convening: waiting for first LLM response ── */}
+            {messages.length === 0 && state === 'running' && (
+              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+                <div className="flex gap-1.5" aria-hidden="true">
+                  <span className="w-2 h-2 rounded-full bg-cyan-600 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-cyan-600 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-cyan-600 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <p className="text-gray-500 text-sm">Convening council…</p>
+                <p className="text-gray-700 text-xs">Moderator is opening the session</p>
               </div>
             )}
 

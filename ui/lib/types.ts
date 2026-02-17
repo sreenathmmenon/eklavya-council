@@ -46,6 +46,7 @@ export interface Council {
 
 export interface StreamChunk {
   type: 'token' | 'speaker_start' | 'round_start' | 'synthesis' | 'done' | 'error';
+  // Note: 'error' IS a valid type sent by the server — do not remove it
   speaker?: string;
   speaker_role?: string;
   round?: number;
