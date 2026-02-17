@@ -3,6 +3,49 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { StreamChunk, Message, Synthesis, Council } from '../lib/types';
 
+// ─── Audio Engine (Web Audio API — no external files) ─────────────────────────
+
+function createAudioCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  try { return new AudioContext(); } catch { return null; }
+}
+
+function playTone(
+  ctx: AudioContext,
+  freq: number,
+  duration: number,
+  startDelay = 0,
+  peakGain = 0.18,
+  type: OscillatorType = 'sine'
+) {
+  try {
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    osc.connect(env);
+    env.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = type;
+    const t = ctx.currentTime + startDelay;
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(peakGain, t + 0.015);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    osc.start(t);
+    osc.stop(t + duration + 0.05);
+  } catch { /* no-op in headless/test environments */ }
+}
+
+/** Short soft ding — end of each speaker turn */
+function playTurnDing(ctx: AudioContext) {
+  playTone(ctx, 880, 0.22, 0, 0.14);
+}
+
+/** Pleasant 3-note ascending chime — synthesis complete */
+function playSynthesisChime(ctx: AudioContext) {
+  playTone(ctx, 523.25, 0.40, 0.00, 0.20); // C5
+  playTone(ctx, 659.25, 0.40, 0.13, 0.20); // E5
+  playTone(ctx, 783.99, 0.65, 0.26, 0.22); // G5
+}
+
 // ─── Council list ─────────────────────────────────────────────────────────────
 const COUNCILS: Council[] = [
   { id: 'software-architecture', name: 'Software Architecture',   description: 'Architecture, tech choices, system design',    persona_ids: [], rounds: 2 },
@@ -110,10 +153,27 @@ export default function Home() {
   const [roster, setRoster]               = useState<RosterEntry[]>([]);
   const [sessionQuestion, setSessionQuestion] = useState('');
 
-  const transcriptRef   = useRef<HTMLDivElement>(null);
-  const abortRef        = useRef<AbortController | null>(null);
-  const speakerThemeMap = useRef<Record<string, number>>({});  // name → theme index
-  const themeCounter    = useRef(0);
+  const transcriptRef      = useRef<HTMLDivElement>(null);
+  const abortRef           = useRef<AbortController | null>(null);
+  const speakerThemeMap    = useRef<Record<string, number>>({});  // name → theme index
+  const themeCounter       = useRef(0);
+  const audioCtxRef        = useRef<AudioContext | null>(null);
+  const soundEnabled       = useRef(true);
+  const [soundOn, setSoundOn] = useState(true);
+  const hasActiveSpeaker   = useRef(false);  // tracks whether a speaker is mid-turn
+
+  function getAudioCtx(): AudioContext | null {
+    if (!soundEnabled.current) return null;
+    if (!audioCtxRef.current) audioCtxRef.current = createAudioCtx();
+    // Resume if suspended (browser autoplay policy)
+    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
+    return audioCtxRef.current;
+  }
+
+  function toggleSound() {
+    soundEnabled.current = !soundEnabled.current;
+    setSoundOn(soundEnabled.current);
+  }
 
   // ── Theme helpers ────────────────────────────────────────────────────────
   const isModeratorSpeaker = (name: string) =>
@@ -160,8 +220,9 @@ export default function Home() {
     setCurrentSpeaker('');
     setRoster([]);
     setSessionQuestion(q);
-    speakerThemeMap.current = {};
-    themeCounter.current    = 0;
+    speakerThemeMap.current  = {};
+    themeCounter.current     = 0;
+    hasActiveSpeaker.current = false;
 
     const controller  = new AbortController();
     abortRef.current  = controller;
@@ -207,6 +268,13 @@ export default function Home() {
             if (chunk.type === 'speaker_start') {
               const spk  = chunk.speaker!;
               const role = chunk.speaker_role!;
+
+              // Play turn-complete ding for the speaker who just finished
+              if (hasActiveSpeaker.current) {
+                const ctx = getAudioCtx();
+                if (ctx) playTurnDing(ctx);
+              }
+              hasActiveSpeaker.current = true;
 
               // Assign theme now (side-effect: populates speakerThemeMap)
               getTheme(spk);
@@ -258,6 +326,10 @@ export default function Home() {
               setRoster(prev => prev.map(r => ({ ...r, status: 'done' as const })));
               setState('done');
               setCurrentSpeaker('');
+              hasActiveSpeaker.current = false;
+              // Ascending chime to signal session complete
+              const ctx = getAudioCtx();
+              if (ctx) setTimeout(() => playSynthesisChime(ctx), 80);
             }
           } catch (parseErr) {
             // Re-throw application errors; only swallow JSON SyntaxErrors
@@ -335,6 +407,15 @@ export default function Home() {
           {state === 'error' && (
             <span className="text-sm text-red-400" role="alert">Failed</span>
           )}
+          {/* Sound toggle */}
+          <button
+            onClick={toggleSound}
+            className="px-2.5 py-1 text-xs text-gray-500 border border-gray-800 rounded hover:border-gray-600 hover:text-gray-300 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-600"
+            title={soundOn ? 'Mute sounds' : 'Enable sounds'}
+            aria-label={soundOn ? 'Mute sounds' : 'Enable sounds'}
+          >
+            {soundOn ? '♪' : '♪̶'}
+          </button>
           {state === 'running' && (
             <button
               onClick={cancelCouncil}
