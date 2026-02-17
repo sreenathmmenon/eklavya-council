@@ -11,9 +11,24 @@ import { getSessionsDir, ensureDirs } from './config.js';
 
 const DISCLAIMER = [
   '---',
-  '*Disclaimer: Personas in Eklavya are AI-generated archetypes, not real people.',
-  ' Output is a thinking tool to support your reasoning — not professional, legal, medical, or financial advice.',
-  ' User-defined persona content is the user\'s own responsibility.*',
+  '## ⚠ Important Disclaimer',
+  '',
+  '**Eklavya Virtual Council** generates AI-simulated debate perspectives. All personas are AI-generated archetypes — they are not real people and do not represent the views of any individual or organisation.',
+  '',
+  'This output is a **thinking tool only**. It is **not** professional, legal, medical, financial, psychological, or crisis advice of any kind.',
+  '',
+  '**You must not rely on this output as a substitute for:**',
+  '- Qualified medical, mental health, or therapeutic professional guidance',
+  '- Legal counsel or regulated financial advice',
+  '- Emergency services or crisis intervention',
+  '',
+  '**If you or someone you know is in crisis:**',
+  '- **988 Suicide & Crisis Lifeline** — call or text **988** (US, available 24/7)',
+  '- **Crisis Text Line** — text **HOME** to **741741** (US, UK, CA, IE)',
+  '- **International resources** — findahelpline.com',
+  '- **Emergency services** — call your local emergency number (911 / 999 / 112)',
+  '',
+  'User-defined persona content is the responsibility of the user who created it.',
 ].join('\n');
 
 export function saveSession(session: Session): string {

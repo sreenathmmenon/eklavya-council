@@ -46,6 +46,26 @@ function playSynthesisChime(ctx: AudioContext) {
   playTone(ctx, 783.99, 0.65, 0.26, 0.22); // G5
 }
 
+// ─── Safety: Sensitive Topic Detection ───────────────────────────────────────
+//
+// We never block questions — people deserve multi-perspective analysis on hard topics.
+// Instead we surface appropriate crisis resources PROMINENTLY above the transcript.
+
+const CRISIS_RE = /\b(suicid|kill\s+myself|end\s+my\s+life|self[- ]?harm|cutting\s+myself|want\s+to\s+die|don'?t\s+want\s+to\s+live|harming\s+myself|hurt\s+myself|take\s+my\s+(own\s+)?life)\b/i;
+
+const SENSITIVE_RE = /\b(mental\s+health|depression|anxiety|trauma|abuse|domestic\s+violence|sexual\s+assault|eating\s+disorder|anorexia|bulimia|psychiat|ptsd|grief|overdose|addiction|substance\s+use)\b/i;
+
+const MEDICAL_RE = /\b(diagnos[ei]|my\s+symptoms|medical\s+advice|treatment\s+plan|medication|dosage|prescription|cancer|heart\s+attack|stroke|seizure|poisoning|should\s+I\s+take)\b/i;
+
+type SafetyLevel = 'none' | 'medical' | 'sensitive' | 'crisis';
+
+function detectSafetyLevel(text: string): SafetyLevel {
+  if (CRISIS_RE.test(text))    return 'crisis';
+  if (SENSITIVE_RE.test(text)) return 'sensitive';
+  if (MEDICAL_RE.test(text))   return 'medical';
+  return 'none';
+}
+
 // ─── Council list ─────────────────────────────────────────────────────────────
 const COUNCILS: Council[] = [
   { id: 'software-architecture', name: 'Software Architecture',   description: 'Architecture, tech choices, system design',    persona_ids: [], rounds: 2 },
@@ -140,6 +160,50 @@ function RoundBanner({ round }: { round: number }) {
   );
 }
 
+// ─── Safety Banner Components ─────────────────────────────────────────────────
+
+function CrisisBanner() {
+  return (
+    <div
+      className="rounded-lg border border-red-700/60 bg-red-950/30 px-4 py-3 mb-3"
+      role="alert"
+      aria-live="assertive"
+    >
+      <p className="text-sm font-semibold text-red-300 mb-1">
+        ⚠ If you or someone you know is in crisis, please reach out now:
+      </p>
+      <ul className="text-xs text-red-200/90 space-y-0.5 mb-2">
+        <li><strong>988 Suicide &amp; Crisis Lifeline</strong> — call or text <strong>988</strong> (US, 24/7)</li>
+        <li><strong>Crisis Text Line</strong> — text <strong>HOME</strong> to <strong>741741</strong> (US, UK, CA, IE)</li>
+        <li><strong>International resources</strong> — <span className="underline">findahelpline.com</span></li>
+        <li><strong>Emergency</strong> — call your local emergency number (911 / 999 / 112)</li>
+      </ul>
+      <p className="text-xs text-red-400/80">
+        Eklavya is an AI thinking tool. It is <strong>not</strong> a crisis service and cannot provide mental health support.
+      </p>
+    </div>
+  );
+}
+
+function SensitiveBanner({ level }: { level: 'sensitive' | 'medical' }) {
+  const isMedical = level === 'medical';
+  return (
+    <div
+      className="rounded-lg border border-amber-800/50 bg-amber-950/20 px-4 py-3 mb-3"
+      role="note"
+    >
+      <p className="text-xs font-semibold text-amber-400 mb-1">
+        {isMedical ? '⚕ Medical topic detected' : '💛 Sensitive topic detected'}
+      </p>
+      <p className="text-xs text-amber-300/80 leading-relaxed">
+        {isMedical
+          ? 'This council can explore perspectives on medical topics, but cannot diagnose, prescribe, or replace a qualified healthcare professional. For any health concern, consult a licensed physician.'
+          : 'This council can help you think through perspectives, but cannot replace a qualified mental health professional, counsellor, or therapist. If you\'re struggling, please reach out to a professional or a trusted person in your life.'}
+      </p>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Home() {
   const [question, setQuestion]           = useState('');
@@ -152,6 +216,7 @@ export default function Home() {
   const [currentSpeaker, setCurrentSpeaker] = useState('');
   const [roster, setRoster]               = useState<RosterEntry[]>([]);
   const [sessionQuestion, setSessionQuestion] = useState('');
+  const [safetyLevel, setSafetyLevel]     = useState<SafetyLevel>('none');
 
   const transcriptRef      = useRef<HTMLDivElement>(null);
   const abortRef           = useRef<AbortController | null>(null);
@@ -220,6 +285,7 @@ export default function Home() {
     setCurrentSpeaker('');
     setRoster([]);
     setSessionQuestion(q);
+    setSafetyLevel(detectSafetyLevel(q));
     speakerThemeMap.current  = {};
     themeCounter.current     = 0;
     hasActiveSpeaker.current = false;
@@ -534,6 +600,7 @@ export default function Home() {
                   setError('');
                   setRoster([]);
                   setSessionQuestion('');
+                  setSafetyLevel('none');
                 }}
                 className="w-full py-2 rounded-lg text-xs text-gray-500 hover:text-gray-300 border border-gray-800 hover:border-gray-600 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-600"
               >
@@ -585,10 +652,27 @@ export default function Home() {
             </div>
           )}
 
-          {/* Disclaimer — always pinned to bottom */}
-          <p className="text-xs text-gray-700 leading-relaxed flex-shrink-0 mt-4 pt-3 border-t border-gray-800/40">
-            AI archetypes · thinking tool · not advice
-          </p>
+          {/* ── Full Disclaimer — pinned to bottom ── */}
+          <details className="flex-shrink-0 mt-4 pt-3 border-t border-gray-800/40 group">
+            <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-400 transition-colors list-none flex items-center gap-1">
+              <span className="group-open:rotate-90 transition-transform inline-block">›</span>
+              <span>Disclaimer &amp; Safety</span>
+            </summary>
+            <div className="mt-2 space-y-2 text-xs text-gray-600 leading-relaxed">
+              <p>
+                Eklavya generates <strong className="text-gray-500">AI-simulated debate perspectives</strong>. Personas are archetypes — not real people.
+              </p>
+              <p>
+                Output is a <strong className="text-gray-500">thinking tool only</strong>. It is not professional, legal, medical, financial, or psychological advice.
+              </p>
+              <p>
+                <strong className="text-gray-500">Never use this tool</strong> as a substitute for qualified professional guidance, crisis support, or emergency services.
+              </p>
+              <p className="text-gray-700">
+                In a crisis? Call <strong className="text-gray-500">988</strong> (US) · Text HOME to <strong className="text-gray-500">741741</strong> · or your local emergency number.
+              </p>
+            </div>
+          </details>
         </aside>
 
         {/* ── Transcript ── */}
@@ -629,6 +713,14 @@ export default function Home() {
                 <p className="text-gray-500 text-sm">Convening council…</p>
                 <p className="text-gray-700 text-xs">Moderator is opening the session</p>
               </div>
+            )}
+
+            {/* ── Safety banners — always shown first when session is active ── */}
+            {safetyLevel === 'crisis' && (state === 'running' || state === 'done') && (
+              <CrisisBanner />
+            )}
+            {(safetyLevel === 'sensitive' || safetyLevel === 'medical') && (state === 'running' || state === 'done') && (
+              <SensitiveBanner level={safetyLevel} />
             )}
 
             {/* ── Question brief at top of transcript ── */}

@@ -89,6 +89,12 @@ function buildPersonaSystemPrompt(rawPersona: Persona): string {
     `- Do NOT open with your own name or "As a [role]..." — just speak.`,
     ``,
     `IMPORTANT: You are an AI generating a debate perspective. Your output is a thinking tool, not authoritative advice.`,
+    `SAFETY RULES (non-negotiable):`,
+    `- Do NOT provide medical diagnoses, treatment recommendations, or drug dosage guidance.`,
+    `- Do NOT provide legal advice, financial advice, or investment recommendations presented as fact.`,
+    `- If the topic involves mental health, self-harm, suicidal ideation, or personal crisis: acknowledge the difficulty, state clearly that professional help is needed, and reference crisis resources (988 in the US; local emergency services). Do not attempt to act as a therapist or crisis counsellor.`,
+    `- If the topic involves domestic violence, abuse, or personal safety: direct the user to professional support immediately.`,
+    `- You may discuss these topics analytically (e.g. policy, research, frameworks) but must never substitute for qualified professional help.`,
   ].filter(Boolean).join('\n');
 }
 
@@ -201,6 +207,8 @@ function buildSynthesisPrompt(question: string, transcript: Message[]): { system
     `Output ONLY valid JSON. No markdown fences, no preamble, no explanation.`,
     ``,
     `IMPORTANT: These are AI-generated debate perspectives, not authoritative professional advice.`,
+    `SAFETY: If the topic involves mental health, self-harm, crisis, abuse, or medical/legal decisions, the "summary" field MUST include a sentence directing the user to seek qualified professional or emergency help. Include crisis line 988 (US) if mental health or crisis is involved.`,
+    `SAFETY: Never include specific medical dosages, diagnoses, investment recommendations, or legal opinions in the output.`,
   ].join('\n');
 
   // For synthesis, use compact transcript (speaker + content only, no metadata)
