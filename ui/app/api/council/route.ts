@@ -23,16 +23,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Question is required' }, { status: 400 });
   }
 
-  // Validate API key availability
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
-
-  if (!anthropicKey && !openaiKey) {
-    return NextResponse.json(
-      { error: 'No API key configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable.' },
-      { status: 500 }
-    );
-  }
+  // Note: API key validation is handled inside the stream by loadConfig() + getActiveProvider().
+  // loadConfig() reads from BOTH process.env vars AND ~/.eklavya/config.json (set via `eklavya init`),
+  // so we must not short-circuit here with an env-only check.
 
   // Create SSE stream
   const encoder = new TextEncoder();
