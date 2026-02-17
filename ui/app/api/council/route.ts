@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
 
       try {
         // Dynamic import to avoid bundling issues
-        const { runCouncilStream } = await import('../../../../src/orchestrator-stream');
-        const { loadConfig } = await import('../../../../src/config');
-        const { getCouncil } = await import('../../../../src/data/councils');
+        const { runCouncilStream } = await import('../../../src/orchestrator-stream');
+        const { loadConfig } = await import('../../../src/config');
+        const { getCouncil } = await import('../../../src/data/councils');
 
         const config = loadConfig();
         const council = getCouncil(council_id ?? 'software-architecture');

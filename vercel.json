@@ -1,7 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "npm install && cd ui && npm install && npm run build",
-  "outputDirectory": "ui/.next",
-  "installCommand": "echo 'deps installed in buildCommand'",
-  "devCommand": "cd ui && npm run dev"
-}
