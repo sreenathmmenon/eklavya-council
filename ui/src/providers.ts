@@ -178,7 +178,15 @@ async function collectGoogle(
 // ─── Unified Call with Retry ──────────────────────────────────────────────────
 
 const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 1500;
+const RETRY_DELAY_MS = 3000;
+
+function isRetryable(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message.toLowerCase();
+  return msg.includes('overload') || msg.includes('529') ||
+         msg.includes('rate_limit') || msg.includes('429') ||
+         msg.includes('timeout') || msg.includes('econnreset');
+}
 
 async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
   let lastError: unknown;
@@ -187,8 +195,10 @@ async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promis
       return await fn();
     } catch (err) {
       lastError = err;
-      if (attempt < retries) {
+      if (attempt < retries && isRetryable(err)) {
         await new Promise(r => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
+      } else if (attempt < retries && !isRetryable(err)) {
+        throw err; // non-retryable errors (auth, bad request) — fail fast
       }
     }
   }
@@ -204,7 +214,7 @@ export async function callProvider(
 ): Promise<string> {
   const providerConfig = config.providers[provider];
   if (!providerConfig?.api_key) {
-    throw new Error(`No API key configured for provider: ${provider}. Run: eklavya init`);
+    throw new Error(`No API key configured for provider: ${provider}. Set the corresponding environment variable (ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY).`);
   }
 
   const apiKey = providerConfig.api_key;

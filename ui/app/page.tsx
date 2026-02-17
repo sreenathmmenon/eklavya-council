@@ -327,7 +327,27 @@ export default function Home() {
 
             // ── error chunk from server ───────────────────────────────────
             if (chunk.type === 'error') {
-              throw new Error(chunk.error ?? 'Council error');
+              const raw = chunk.error;
+              // raw may be a string or a nested Anthropic error object
+              let msg = 'Council error — please try again.';
+              if (typeof raw === 'string') {
+                msg = raw;
+              } else if (raw && typeof raw === 'object') {
+                const errObj = raw as Record<string, unknown>;
+                const errType  = errObj.type as string | undefined;
+                const errInner = errObj.error as Record<string, unknown> | undefined;
+                const errMsg   = (errInner?.message ?? errObj.message) as string | undefined;
+                if (errType === 'overloaded_error' || errInner?.type === 'overloaded_error') {
+                  msg = 'The AI service is temporarily overloaded. Please wait a moment and try again.';
+                } else if (errType === 'authentication_error' || errInner?.type === 'authentication_error') {
+                  msg = 'API key is invalid or missing. Check your environment configuration.';
+                } else if (errType === 'rate_limit_error' || errInner?.type === 'rate_limit_error') {
+                  msg = 'Rate limit reached. Please wait a moment and try again.';
+                } else if (errMsg) {
+                  msg = errMsg;
+                }
+              }
+              throw new Error(msg);
             }
 
             // ── speaker_start: new persona takes the floor ───────────────
