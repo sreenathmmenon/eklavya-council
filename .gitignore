@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.env.local
+.DS_Store
+*.log
+.eklavya/
+ui/.next/
+ui/node_modules/
+ui/out/
+*.tsbuildinfo
