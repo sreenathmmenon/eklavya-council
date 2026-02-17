@@ -251,7 +251,7 @@ export async function runCouncilStream(
   const synthUser = [`Question: "${question}"`, ``, `Transcript:`, compactTranscript].join('\n');
 
   let synthText = await callProvider(
-    { system: synthSystem, user: synthUser, max_tokens: 1000, temperature: 0.2 },
+    { system: synthSystem, user: synthUser, max_tokens: 1200, temperature: 0.2, prefill: '{' },
     activeProvider, config, undefined, null
   );
   providerCalls++;
@@ -276,7 +276,11 @@ export async function runCouncilStream(
     if (!Array.isArray(synthesis.actions))        synthesis.actions       = [];
     if (!synthesis.confidence)                    synthesis.confidence    = 'medium';
     if (!synthesis.summary)                       synthesis.summary       = 'See transcript.';
-  } catch {
+  } catch (parseErr) {
+    // Log raw output so we can debug what the model actually returned
+    console.error('[eklavya] Synthesis JSON parse failed.');
+    console.error('[eklavya] Raw synthesis text:', JSON.stringify(synthText));
+    console.error('[eklavya] Parse error:', parseErr);
     synthesis = {
       decisions: [],
       dissent: [],

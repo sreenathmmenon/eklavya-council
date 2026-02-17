@@ -115,15 +115,27 @@ async function collectAnthropic(
   const Anthropic = (await import('@anthropic-ai/sdk')).default;
   const client = new Anthropic({ apiKey });
 
+  // Assistant prefill forces the model to continue from a given string.
+  // Used for synthesis to guarantee JSON output: prefill='{' means the
+  // model cannot deviate — it must complete the JSON object.
+  const messages: { role: 'user' | 'assistant'; content: string }[] = [
+    { role: 'user', content: request.user },
+  ];
+  if (request.prefill) {
+    messages.push({ role: 'assistant', content: request.prefill });
+  }
+
   const response = await client.messages.create({
     model,
     max_tokens: request.max_tokens ?? 400,
     temperature: request.temperature ?? 0.3,
     system: request.system,
-    messages: [{ role: 'user', content: request.user }],
+    messages,
   });
 
-  return response.content[0].type === 'text' ? response.content[0].text : '';
+  const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
+  // If we used a prefill, prepend it back — the API returns only the continuation
+  return request.prefill ? request.prefill + text : text;
 }
 
 async function collectOpenAI(

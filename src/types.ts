@@ -70,6 +70,7 @@ export interface LLMRequest {
   user: string;
   max_tokens?: number;
   temperature?: number;
+  prefill?: string;  // assistant turn prefill — forces model to continue from this string
 }
 
 export type StreamCallback = (token: string) => void;

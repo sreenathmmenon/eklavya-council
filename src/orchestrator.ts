@@ -412,7 +412,7 @@ export async function runCouncil(
 
   let synthText = '';
   synthText = await callProvider(
-    { system: synthSys, user: synthUser, max_tokens: 1000, temperature: 0.2 },
+    { system: synthSys, user: synthUser, max_tokens: 1200, temperature: 0.2, prefill: '{' },
     activeProvider, config, undefined,
     null // no streaming — need clean JSON
   );
