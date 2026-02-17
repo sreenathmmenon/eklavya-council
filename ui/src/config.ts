@@ -24,10 +24,16 @@ export function getPersonasDir(): string { return PERSONAS_DIR; }
 export function getCouncilsDir(): string { return COUNCILS_DIR; }
 
 export function ensureDirs(): void {
-  for (const dir of [CONFIG_DIR, SESSIONS_DIR, PERSONAS_DIR, COUNCILS_DIR]) {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  // In serverless environments (Vercel, Lambda) the home dir is read-only.
+  // Silently skip dir creation — env-var-based config still works fine.
+  try {
+    for (const dir of [CONFIG_DIR, SESSIONS_DIR, PERSONAS_DIR, COUNCILS_DIR]) {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+      }
     }
+  } catch {
+    // read-only filesystem — no local config file support, env vars still work
   }
 }
 
@@ -95,7 +101,6 @@ export function getActiveProvider(config: EklavyaConfig): ProviderName {
     if (hasProvider(config, p)) return p;
   }
   throw new Error(
-    'No API key configured. Run: eklavya init\n' +
-    'Or set ANTHROPIC_API_KEY / OPENAI_API_KEY / GOOGLE_API_KEY environment variable.'
+    'No API key configured. Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY as an environment variable.'
   );
 }
