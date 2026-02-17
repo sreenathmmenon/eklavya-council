@@ -35,7 +35,7 @@ function printBrand(): void {
   console.log(chalk.bold.cyan('  ███████╗██║  ██╗███████╗██║  ██║ ╚████╔╝    ██║   ██║  ██║'));
   console.log(chalk.bold.cyan('  ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝  ╚═══╝     ╚═╝   ╚═╝  ╚═╝'));
   console.log('');
-  console.log(chalk.dim('  Virtual Council  ·  Multi-Persona LLM Debate Engine  ·  v' + VERSION));
+  console.log(chalk.dim('  Eklavya Council  ·  The debate your question deserves.  ·  v' + VERSION));
   console.log(chalk.dim('  Personas are AI archetypes. Output is a thinking tool, not advice.'));
   console.log('');
 }
@@ -46,7 +46,7 @@ const program = new Command();
 
 program
   .name('eklavya')
-  .description('Eklavya Virtual Council — convene expert AI personas to debate any question')
+  .description('Eklavya Council — the debate your question deserves.')
   .version(VERSION);
 
 // ─── init ─────────────────────────────────────────────────────────────────────

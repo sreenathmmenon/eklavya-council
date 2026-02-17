@@ -1,8 +1,8 @@
-# Eklavya Virtual Council
+# Eklavya Council
 
 > *Eklavya learned from a clay idol of his guru when no real teacher would take him. This tool is your virtual council when no expert is available.*
 
-**Eklavya** is a multi-persona LLM debate engine. You pose a question. A council of named expert personas debate it in structured rounds. A synthesis engine produces decisions, dissent, open questions, and action items.
+**Eklavya Council** — the debate your question deserves. You pose a question. A council of expert AI personas debate it in structured rounds. A synthesis engine produces decisions, dissent, open questions, and action items.
 
 Not a chatbot. A **thinking environment**.
 

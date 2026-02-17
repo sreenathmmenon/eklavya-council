@@ -1,7 +1,7 @@
 {
   "name": "eklavya-council",
   "version": "0.1.0",
-  "description": "Eklavya Virtual Council — multi-persona LLM debate engine for decisions, architecture, mentoring, and clarity",
+  "description": "Eklavya Council — the debate your question deserves.",
   "main": "dist/cli.js",
   "bin": {
     "eklavya": "./dist/cli.js"

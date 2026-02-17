@@ -13,7 +13,7 @@ const DISCLAIMER = [
   '---',
   '## ⚠ Important Disclaimer',
   '',
-  '**Eklavya Virtual Council** generates AI-simulated debate perspectives. All personas are AI-generated archetypes — they are not real people and do not represent the views of any individual or organisation.',
+  '**Eklavya Council** generates AI-simulated debate perspectives. All personas are AI-generated archetypes — they are not real people and do not represent the views of any individual or organisation.',
   '',
   'This output is a **thinking tool only**. It is **not** professional, legal, medical, financial, psychological, or crisis advice of any kind.',
   '',

@@ -440,9 +440,9 @@ export default function Home() {
         role="banner"
       >
         <div className="flex items-baseline gap-3">
-          <h1 className="text-lg font-bold text-cyan-400 tracking-[0.25em]">EKLAVYA</h1>
+          <h1 className="text-lg font-bold text-cyan-400 tracking-[0.25em]">EKLAVYA COUNCIL</h1>
           <span className="text-xs text-gray-600 hidden sm:inline">
-            Virtual Council · Multi-Persona AI Debate
+            The debate your question deserves.
           </span>
         </div>
 
