@@ -6,6 +6,8 @@
 
 Not a chatbot. A **thinking environment**.
 
+> ⚠ **Disclaimer:** Eklavya Council generates AI-simulated debate perspectives. All personas are AI-generated archetypes — not real people. Output is a **thinking tool only** — not professional, legal, medical, financial, or psychological advice. Never use this as a substitute for qualified professional help. **In a crisis, call 988 (US) or your local emergency number.**
+
 ---
 
 ## What it does
@@ -13,30 +15,30 @@ Not a chatbot. A **thinking environment**.
 ```
 You: "Should we migrate to microservices?"
 
-EKLAVYA  ·  Software Architecture Council
-══════════════════════════════════════════
+EKLAVYA COUNCIL  ·  Software Architecture Council
+══════════════════════════════════════════════════
 
-── MODERATOR  ·  Opening ─────────────────
+── MODERATOR  ·  Opening ─────────────────────────
 We're examining microservices migration across three dimensions:
 team topology fit, operational complexity, and long-term scalability.
 
-── MARTIN KLEPPMANN  ·  Distributed Systems ─────
+── DISTRIBUTED SYSTEMS EXPERT ────────────────────
 The question is poorly formed. "Microservices" is a deployment
 topology, not an architecture. What you're actually asking is whether
 Conway's Law alignment justifies the operational overhead...
 
-── THE SKEPTIC  ·  Senior Engineer ──────
+── THE SKEPTIC  ·  Senior Engineer ───────────────
 I've seen three companies do this migration. Two of them spent 18 months
 and ended up with a distributed monolith harder to debug than what
 they started with...
 
-── SYNTHESIS ─────────────────────────────
+── SYNTHESIS ──────────────────────────────────────
 ✓ DECISIONS
   1. Do not migrate — team cognitive load cannot support it at current size
   2. Address the real problem: module coupling inside the monolith first
 
 ⚡ DISSENT
-  · Kleppmann: question needs reframing — this isn't an architecture question
+  · Systems Expert: question needs reframing — this isn't an architecture question
 
 → ACTIONS
   1. Run Team Topologies assessment before any architecture discussion
@@ -48,12 +50,15 @@ they started with...
 ## Install
 
 ```bash
-# From source
+npm install -g eklavya-council
+```
+
+Or from source:
+
+```bash
 git clone https://github.com/sreenathmmenon/eklavya-council.git
 cd eklavya-council
-npm install
-npm run build
-npm link
+npm install && npm run build && npm link
 ```
 
 ---
@@ -87,40 +92,39 @@ eklavya ask "Tabs vs spaces" --personas "skeptic,pragmatist,devil-advocate"
 
 ## Councils
 
-| Council | Personas | Best for |
-|---|---|---|
-| `software-architecture` | Kleppmann, Skeptic, Pragmatist, Security, CFO | Architecture, tech choices, system design |
-| `product-strategy` | CEO, Pragmatist, Visionary, Devil's Advocate, CFO | Product direction, features, build vs buy |
-| `career-decision` | Mentor, Realist, Ambitious Challenger, Stoic | Career moves, pivots, learning investments |
-| `startup-idea` | CEO, CFO, Skeptic, Visionary, Devil's Advocate | Startup validation, business model review |
-| `code-review` | Kleppmann, Security Expert, Pragmatist, Hightower | Architectural code review |
-| `personal-decision` | Stoic, Realist, Mentor, Ambitious Challenger | Life decisions, priorities |
-| `deep-debate` | 7 experts, 3 rounds | Comprehensive technical analysis |
-| `learning-path` | Jeff Dean, Hightower, Mentor, Pragmatist | What to learn next |
+| Council | Best for |
+|---|---|
+| `software-architecture` | Architecture, tech choices, system design |
+| `product-strategy` | Product direction, features, build vs buy |
+| `career-decision` | Career moves, pivots, learning investments |
+| `startup-idea` | Startup validation, business model review |
+| `code-review` | Architectural code review, patterns, security |
+| `personal-decision` | Life decisions, priorities, values |
+| `deep-debate` | 7 experts · 3 rounds · comprehensive analysis |
+| `learning-path` | What to learn next, skill priorities |
 
 ---
 
 ## Personas
 
-### Tech Experts
-| ID | Name | Role |
-|---|---|---|
-| `martin-kleppmann` | Martin Kleppmann | Distributed Systems Author (DDIA) |
-| `jeff-dean` | Jeff Dean | Large-Scale Systems (Google) |
-| `gwen-shapira` | Gwen Shapira | Kafka PMC / Confluent |
-| `kelsey-hightower` | Kelsey Hightower | Kubernetes / Cloud Native |
-| `dan-abramov` | Dan Abramov | React Core / Meta |
-| `werner-vogels` | Werner Vogels | CTO, AWS |
-
-### Archetypes
+### Domain Experts (Archetypes)
 | ID | Role |
 |---|---|
-| `skeptic` | Senior Engineer (10 years battle scars) |
+| `distributed-systems-expert` | Author & Researcher in Distributed Systems |
+| `cloud-native-expert` | Cloud Infrastructure & Kubernetes Practitioner |
+| `data-engineer` | Data Platform & Streaming Specialist |
+| `large-scale-systems-engineer` | Hyperscale Infrastructure Architect |
+| `frontend-architect` | Frontend Systems & Developer Experience Lead |
+| `security-expert` | Principal Security Engineer |
+
+### Debate Archetypes
+| ID | Role |
+|---|---|
+| `skeptic` | Senior Engineer (10+ years battle scars) |
 | `pragmatist` | Staff Engineer / Ship It Person |
 | `devil-advocate` | Hired Contrarian |
 | `cfo` | Chief Financial Officer |
 | `ceo` | Chief Executive Officer |
-| `security-expert` | Principal Security Engineer |
 | `visionary` | CTO / Futurist |
 
 ### Life & Career
@@ -131,19 +135,24 @@ eklavya ask "Tabs vs spaces" --personas "skeptic,pragmatist,devil-advocate"
 | `ambitious-challenger` | High-Performance Coach |
 | `stoic` | Philosophical Advisor |
 
+> **Custom personas:** Create your own with `eklavya persona add` — stored locally in `~/.eklavya/personas/`.
+
 ---
 
 ## Multi-Provider Support
 
 ```bash
-# Single provider
+# Anthropic (default)
 export ANTHROPIC_API_KEY=sk-ant-...
-eklavya ask "..."
 
-# Multiple providers — set both, eklavya uses what's available
-export ANTHROPIC_API_KEY=sk-ant-...
+# OpenAI
 export OPENAI_API_KEY=sk-...
-eklavya ask "..." --provider openai  # override for this session
+
+# Google Gemini
+export GOOGLE_API_KEY=...
+
+# Override provider for a session
+eklavya ask "..." --provider openai
 ```
 
 Supported: `anthropic` (Claude), `openai` (GPT-4o), `google` (Gemini)
@@ -163,7 +172,11 @@ eklavya ask [question]           Convene a council
   -o, --output <file>            Export session to markdown
 
 eklavya councils list            List all councils
+eklavya council add              Create a custom council
+eklavya council delete <id>      Delete a custom council
+
 eklavya personas list            List all personas
+eklavya persona add              Create a custom persona
 eklavya personas show <id>       Show persona details
 
 eklavya sessions list            List recent sessions
@@ -175,9 +188,9 @@ eklavya status                   Show configuration status
 
 ---
 
-## UI (Phase 2)
+## Web UI
 
-A web UI is included in `ui/` (Next.js 15 + Tailwind).
+A web UI is included in `ui/` (Next.js 15 + Tailwind). Live streaming, per-persona colours, council verdict panel.
 
 ```bash
 cd ui
@@ -216,12 +229,12 @@ Storage (src/storage.ts)
 
 ## Use Cases
 
-- **Architecture decisions** — 5 expert viewpoints in 3 minutes
-- **Doubt clearance** — Ask Kleppmann and Gwen Shapira your Kafka question
+- **Architecture decisions** — multiple expert viewpoints in minutes
 - **Career decisions** — Mentor, Realist, and Ambitious Challenger weigh in
-- **Mentoring** — Socratic debate that teaches through conflict
-- **Product strategy** — CEO + CFO + Skeptic before committing resources
-- **Personal decisions** — Stoic + Realist + Long-term thinker at 2am
+- **Startup validation** — CEO + CFO + Skeptic before committing resources
+- **Personal decisions** — Stoic + Realist + Mentor at 2am
+- **Code review** — Security, Systems, and Pragmatist perspectives
+- **Learning path** — What to learn next from multiple angles
 
 ---
 
@@ -229,14 +242,22 @@ Storage (src/storage.ts)
 
 - [x] CLI with streaming output
 - [x] Multi-provider support (Anthropic, OpenAI, Google)
-- [x] 8 built-in councils, 17 built-in personas
+- [x] 8 built-in councils, 16 built-in personas
 - [x] Session history and markdown export
-- [ ] Web UI (Next.js) — scaffold in `ui/`
-- [ ] Custom persona creation
-- [ ] Custom council builder
+- [x] Custom persona and council creation
+- [x] Web UI (Next.js + Tailwind) with live streaming
 - [ ] Persona memory across sessions
 - [ ] Ollama local model support (offline mode)
 - [ ] Shareable session links
+
+---
+
+## Safety & Limitations
+
+- All personas are **AI-generated archetypes** — not real people
+- Output is a **thinking tool**, not authoritative advice
+- Not a substitute for medical, legal, financial, or mental health professionals
+- **Crisis resources:** 988 Suicide & Crisis Lifeline (US) · Crisis Text Line: text HOME to 741741
 
 ---
 
@@ -247,6 +268,6 @@ Open an issue or PR at [github.com/sreenathmmenon/eklavya-council](https://githu
 
 ---
 
-*"Theory is cheap. These decisions have scar tissue behind them."*
+*"The debate your question deserves."*
 
-**License:** MIT
+**License:** MIT · **Author:** Sreenath
