@@ -151,6 +151,7 @@ program
   .option('--provider <name>', 'Override LLM provider (anthropic|openai|google)')
   .option('--no-stream', 'Disable streaming output')
   .option('-o, --output <file>', 'Save session as markdown to file')
+  .option('--context <text>', 'Your role/situation — personas will tailor their advice to you')
   .action(async (questionArg: string | undefined, opts) => {
     const config = loadConfig();
 
@@ -191,7 +192,8 @@ program
       : undefined;
 
     try {
-      const session = await runCouncil(question!, council, config, personaOverrides);
+      const userContext = opts.context?.trim() || undefined;
+      const session = await runCouncil(question!, council, config, personaOverrides, userContext);
       const file = saveSession(session);
       console.log(chalk.dim(`  Session saved: ${file}`));
       console.log(chalk.dim(`  Session ID:    ${session.id}`));
