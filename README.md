@@ -6,6 +6,8 @@
 
 Not a chatbot. A **thinking environment**.
 
+**[→ Try it live: eklavya-council.onrender.com](https://eklavya-council.onrender.com)**
+
 > ⚠ **Disclaimer:** Eklavya Council generates AI-simulated debate perspectives. All personas are AI-generated archetypes — not real people. Output is a **thinking tool only** — not professional, legal, medical, financial, or psychological advice. Never use this as a substitute for qualified professional help. **In a crisis, call 988 (US) or your local emergency number.**
 
 ---
@@ -191,6 +193,10 @@ eklavya status                   Show configuration status
 ## Web UI
 
 A web UI is included in `ui/` (Next.js 15 + Tailwind). Live streaming, per-persona colours, council verdict panel.
+
+**Live:** [eklavya-council.onrender.com](https://eklavya-council.onrender.com)
+
+To run locally:
 
 ```bash
 cd ui
