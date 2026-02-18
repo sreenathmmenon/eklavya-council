@@ -1,6 +1,6 @@
 {
   "name": "eklavya-council",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Eklavya Council — the debate your question deserves.",
   "main": "dist/cli.js",
   "bin": {
