@@ -308,17 +308,22 @@ export default function Home() {
 
       const reader  = response.body!.getReader();
       const decoder = new TextDecoder();
+      let sseBuffer = '';
 
       outer: while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const lines = decoder
-          .decode(value)
-          .split('\n')
-          .filter(l => l.startsWith('data: '));
+        // Accumulate into buffer — synthesis JSON can span multiple read() chunks
+        sseBuffer += decoder.decode(value, { stream: true });
 
-        for (const line of lines) {
+        // SSE events are delimited by \n\n — only process complete events
+        const events = sseBuffer.split('\n\n');
+        sseBuffer = events.pop() ?? '';   // keep incomplete tail for next read
+
+        for (const event of events) {
+          const line = event.split('\n').find(l => l.startsWith('data: '));
+          if (!line) continue;
           const data = line.slice(6).trim();
           if (data === '[DONE]') { setState('done'); break outer; }
 
