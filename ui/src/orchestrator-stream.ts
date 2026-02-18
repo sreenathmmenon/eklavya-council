@@ -271,7 +271,7 @@ export async function runCouncilStream(
   ].filter(Boolean).join('\n');
 
   let synthText = await callProvider(
-    { system: synthSystem, user: synthUser, max_tokens: 1200, temperature: 0.2, prefill: '{' },
+    { system: synthSystem, user: synthUser, max_tokens: 1800, temperature: 0.2, prefill: '{' },
     activeProvider, config, undefined, null
   );
   providerCalls++;
