@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: eklavya-council
+    runtime: node
+    rootDir: ui
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
