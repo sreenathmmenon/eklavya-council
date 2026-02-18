@@ -207,6 +207,7 @@ function SensitiveBanner({ level }: { level: 'sensitive' | 'medical' }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Home() {
   const [question, setQuestion]           = useState('');
+  const [userContext, setUserContext]     = useState('');
   const [councilId, setCouncilId]         = useState('software-architecture');
   const [rounds, setRounds]               = useState(2);
   const [state, setState]                 = useState<SessionState>('idle');
@@ -297,7 +298,7 @@ export default function Home() {
       const response = await fetch('/api/council', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ question: q, council_id: councilId, rounds }),
+        body:    JSON.stringify({ question: q, council_id: councilId, rounds, userContext: userContext.trim() || undefined }),
         signal:  controller.signal,
       });
 
@@ -551,6 +552,25 @@ export default function Home() {
               <p id="question-hint" className="text-xs text-gray-700 mt-1">⌘↩ to run</p>
             </div>
 
+            {/* Context (optional) */}
+            <div>
+              <label
+                htmlFor="context-input"
+                className="text-xs text-gray-500 uppercase tracking-wider mb-1.5 block"
+              >
+                About you <span className="normal-case text-gray-700">(optional)</span>
+              </label>
+              <textarea
+                id="context-input"
+                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-700 focus:outline-none focus:border-cyan-700 focus:ring-1 focus:ring-cyan-800 resize-none transition-colors"
+                rows={2}
+                placeholder="Your role, situation, constraints…"
+                value={userContext}
+                onChange={e => setUserContext(e.target.value)}
+                disabled={state === 'running'}
+              />
+            </div>
+
             {/* Council */}
             <div>
               <label
@@ -626,6 +646,7 @@ export default function Home() {
                   setRoster([]);
                   setSessionQuestion('');
                   setSafetyLevel('none');
+                  setUserContext('');
                 }}
                 className="w-full py-2 rounded-lg text-xs text-gray-500 hover:text-gray-300 border border-gray-800 hover:border-gray-600 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-600"
               >
@@ -757,6 +778,11 @@ export default function Home() {
                 <p className="text-sm text-gray-200 leading-relaxed">
                   &ldquo;{sessionQuestion}&rdquo;
                 </p>
+                {userContext.trim() && (
+                  <p className="text-xs text-gray-500 mt-2 leading-relaxed border-t border-gray-800/60 pt-2">
+                    {userContext.trim()}
+                  </p>
+                )}
               </div>
             )}
 
@@ -921,7 +947,7 @@ export default function Home() {
               >
                 <p className="text-sm text-red-400">✗ {error}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Run <code className="text-gray-400">eklavya status</code> to check API key configuration.
+                  Check your API key configuration or try again in a moment.
                 </p>
               </div>
             )}

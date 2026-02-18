@@ -51,7 +51,7 @@ function contrarianInstruction(level: number): string {
 
 // ─── Prompt Builders ──────────────────────────────────────────────────────────
 
-function buildPersonaSystemPrompt(rawPersona: Persona): string {
+function buildPersonaSystemPrompt(rawPersona: Persona, userContext?: string): string {
   const persona = sanitisePersona(rawPersona);
   const displayName = persona.display_name ?? persona.name;
 
@@ -61,6 +61,10 @@ function buildPersonaSystemPrompt(rawPersona: Persona): string {
     `YOUR EXPERTISE: ${persona.expertise.join(', ')}.`,
     `YOUR COMMUNICATION STYLE: ${persona.style}`,
     persona.bias ? `YOUR KNOWN PERSPECTIVE: ${persona.bias}` : '',
+    ``,
+    userContext
+      ? `PERSON YOU ARE ADVISING:\n${userContext}\nSpeak directly to their specific situation — not a generic version of the question. Reference their context explicitly.`
+      : '',
     ``,
     `COUNCIL RULES:`,
     `- You are one voice in a multi-expert council debate.`,
@@ -127,7 +131,8 @@ export async function runCouncilStream(
   council: Council,
   config: EklavyaConfig,
   onChunk: ChunkCallback,
-  personaOverrides?: string[]
+  personaOverrides?: string[],
+  userContext?: string
 ): Promise<Session> {
   const start = Date.now();
   const transcript: Message[] = [];
@@ -152,10 +157,11 @@ export async function runCouncilStream(
   ].join('\n');
   const modOpenUser = [
     `Open this council session on: "${question}"`,
+    userContext ? `Context about the person asking: ${userContext}` : '',
     `Council focus: ${council.focus ?? 'general analysis'}`,
     `Experts attending: ${personaNames.join(', ')}.`,
-    `Frame the session in 2–3 sentences. Identify key tensions to explore.`,
-  ].join('\n');
+    `Frame the session in 2–3 sentences. Identify key tensions to explore. If context was provided, acknowledge it briefly.`,
+  ].filter(Boolean).join('\n');
 
   const moderatorOpen = await callProvider(
     { system: modOpenSystem, user: modOpenUser, max_tokens: 150, temperature: 0.5 },
@@ -185,7 +191,7 @@ export async function runCouncilStream(
       const model = persona.model ?? config.providers[provider]?.default_model ?? '';
       modelVersions[persona.id] = `${provider}/${model}`;
 
-      const systemPrompt = buildPersonaSystemPrompt(persona);
+      const systemPrompt = buildPersonaSystemPrompt(persona, userContext);
       const userPrompt = buildPersonaUserPrompt(persona, question, transcript, roundSummaries, round);
       const temperature = contrarianTemperature(persona.contrarian_level);
 
@@ -256,7 +262,13 @@ export async function runCouncilStream(
     .map(m => `[${m.speaker}]: ${m.content}`)
     .join('\n\n');
 
-  const synthUser = [`Question: "${question}"`, ``, `Transcript:`, compactTranscript].join('\n');
+  const synthUser = [
+    `Question: "${question}"`,
+    userContext ? `Person's context: ${userContext}` : '',
+    ``,
+    `Transcript:`,
+    compactTranscript,
+  ].filter(Boolean).join('\n');
 
   let synthText = await callProvider(
     { system: synthSystem, user: synthUser, max_tokens: 1200, temperature: 0.2, prefill: '{' },

@@ -56,7 +56,7 @@ export const maxDuration = 300; // 5 minutes max
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { question, council_id, rounds } = body;
+  const { question, council_id, rounds, userContext } = body;
 
   if (!question?.trim()) {
     return NextResponse.json({ error: 'Question is required' }, { status: 400 });
@@ -86,9 +86,10 @@ export async function POST(req: NextRequest) {
         const council = getCouncil(council_id ?? 'software-architecture');
         if (rounds) council.rounds = Math.min(3, Math.max(1, Number(rounds)));
 
+        const ctx = typeof userContext === 'string' && userContext.trim() ? userContext.trim() : undefined;
         await runCouncilStream(question, council, config, (chunk) => {
           send(chunk);
-        });
+        }, undefined, ctx);
 
         send('[DONE]');
       } catch (e: any) {
